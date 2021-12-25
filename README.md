@@ -12,37 +12,39 @@ as you log only `Debug` and `Info` the older logs eventually get overwritten by
 newer logs.
 
 ```go
+package main
+
 import (
 	"os"
 
-    "github.com/sirupsen/logrus"
-    bufferhook "github.com/molecule-man/logrus-buffer-hook.git"
+	"github.com/sirupsen/logrus"
+	bufferhook "github.com/molecule-man/logrus-buffer-hook.git"
 )
 
 func main() {
-    logger := logrus.New()
-    logger.SetLevel(logrus.DebugLevel)
-    logger.SetOutput(ioutil.Discard) // discard main output writer, otherwise logs will be written twice
+	logger := logrus.New()
+	logger.SetLevel(logrus.DebugLevel)
+	logger.SetOutput(ioutil.Discard) // discard main output writer, otherwise logs will be written twice
 
-    hook := bufferhook.New(os.Stderr, 10000) // the buffer will be of fixed size of 10 kb
-    hook.LogLevels = []log.Level{
-    	// this log levels are always logged and cause the buffer with Debug and
-        // Info levels be flushed. This behavior is specified by the next
-        // statement where we define FlushCondition
+	hook := bufferhook.New(os.Stderr, 10000) // the buffer will be of fixed size of 10 kb
+	hook.LogLevels = []log.Level{
+		// this log levels are always logged and cause the buffer with Debug and
+		// Info levels be flushed. This behavior is specified by the next
+		// statement where we define FlushCondition
 		logrus.PanicLevel,
 		logrus.FatalLevel,
 		logrus.ErrorLevel,
 		logrus.WarnLevel,
 
-        // this log levels are not logged immediately but rather kept in buffer
-        // until one of the previously defined levels is logged
+		// this log levels are not logged immediately but rather kept in buffer
+		// until one of the previously defined levels is logged
 		logrus.InfoLevel,
 		logrus.DebugLevel,
 	},
-    // here we actually define that all levels starting from `Warning` should
-    // cause buffer to be flushed
+	// here we actually define that all levels starting from `Warning` should
+	// cause buffer to be flushed
 	hook.FlushCondition = bufferhook.FlushOnLevel(logrus.WarnLevel)
 
-    logger.AddHook(hook)
+	logger.AddHook(hook)
 }
 ```
