@@ -29,7 +29,7 @@ func main() {
 	hook := bufferhook.New(os.Stderr, 10000) // the buffer will be of fixed size of 10 kb
 	hook.LogLevels = []log.Level{
 		// this log levels are always logged and cause the buffer with Debug and
-		// Info levels be flushed. This behavior is specified by the next
+		// Info levels to be flushed. This behavior is specified by the next
 		// statement where we define FlushCondition
 		logrus.PanicLevel,
 		logrus.FatalLevel,
