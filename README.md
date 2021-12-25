@@ -1,4 +1,4 @@
-# Fixed-size buffer hook for Logrus <img src="http://i.imgur.com/hTeVwmJ.png" width="40" height="40" alt=":walrus:" class="emoji" title=":walrus:" />
+# Fixed-size buffer hook for Logrus <img src="http://i.imgur.com/hTeVwmJ.png" width="40" height="40" alt=":walrus:" class="emoji" title=":walrus:" />&nbsp;[![Build Status](https://circleci.com/gh/molecule-man/logrus-buffer-hook/tree/main.svg?style=svg)](https://circleci.com/gh/molecule-man/logrus-buffer-hook/tree/main)
 
 This logrus hook keeps the logs in fixed-size buffer and flushes the buffer when
 certain condition is met, e.g. when error level is logged.
