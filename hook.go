@@ -24,13 +24,22 @@ func New(w io.Writer, size int) *Hook {
 type Hook struct {
 	LogLevels      []logrus.Level
 	FlushCondition FlushCondition
+	Formatter      logrus.Formatter
 
 	w   io.Writer
 	buf *Buffer
 }
 
 func (hook *Hook) Fire(entry *logrus.Entry) error {
-	line, err := entry.Bytes()
+	var line []byte
+	var err error
+
+	if hook.Formatter != nil {
+		line, err = hook.Formatter.Format(entry)
+	} else {
+		line, err = entry.Bytes()
+	}
+
 	if err != nil {
 		return err
 	}
@@ -62,3 +71,7 @@ func FlushOnLevel(level logrus.Level) FlushCondition {
 func FlushOnBufferOverflow(entry *logrus.Entry, line []byte, buf *Buffer) bool {
 	return len(line) > buf.Available()
 }
+
+type NullFormatter struct{}
+
+func (NullFormatter) Format(e *logrus.Entry) ([]byte, error) { return []byte{}, nil }

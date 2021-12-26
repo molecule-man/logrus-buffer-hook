@@ -48,3 +48,19 @@ func main() {
 	logger.AddHook(hook)
 }
 ```
+
+### Prevent unnecessary serialization from happening
+
+In previous example it was shown that logger's default writer has to be
+discarded  with `logger.SetOutput(ioutil.Discard)`. However then logrus will
+serialize log entry twice. Once by logger (before sending it to io.Discard) and
+the second time by the hook itself. To prevent this unnecessary serialization
+it's recommended to use `NullFormatter` that does nothing:
+
+```go
+// ...
+hook.Formatter = logger.Formatter
+// ...
+logger.Formatter = &bufferhook.NullFormatter{}
+}
+```

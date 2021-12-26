@@ -104,3 +104,31 @@ type testFormatter struct{}
 func (f *testFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	return []byte(entry.Message + "\n"), nil
 }
+
+func BenchmarkLoggerNoFormatter(b *testing.B) {
+	logger := logrus.New()
+	logger.SetOutput(io.Discard)
+	hook := logrusbufferhook.New(io.Discard, 1024)
+	hook.FlushCondition = neverFlush
+	logger.AddHook(hook)
+
+	for i := 0; i < b.N; i++ {
+		logger.Info("test log")
+	}
+}
+
+func BenchmarkLoggerNullFormatter(b *testing.B) {
+	logger := logrus.New()
+	logger.SetOutput(io.Discard)
+	hook := logrusbufferhook.New(io.Discard, 1024)
+	hook.FlushCondition = neverFlush
+	hook.Formatter = logger.Formatter
+	logger.AddHook(hook)
+	logger.Formatter = &logrusbufferhook.NullFormatter{}
+
+	for i := 0; i < b.N; i++ {
+		logger.Info("test log")
+	}
+}
+
+func neverFlush(_ *logrus.Entry, _ []byte, _ *logrusbufferhook.Buffer) bool { return false }
