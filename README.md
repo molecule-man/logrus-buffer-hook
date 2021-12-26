@@ -62,5 +62,4 @@ it's recommended to use `NullFormatter` that does nothing:
 hook.Formatter = logger.Formatter
 // ...
 logger.Formatter = &bufferhook.NullFormatter{}
-}
 ```
