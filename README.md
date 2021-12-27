@@ -24,25 +24,14 @@ import (
 func main() {
 	logger := logrus.New()
 	logger.SetLevel(logrus.DebugLevel)
-	logger.SetOutput(ioutil.Discard) // discard main output writer, otherwise logs will be written twice
+	// discard main output writer, otherwise logs will be written twice
+	logger.SetOutput(ioutil.Discard)
 
-	hook := bufferhook.New(os.Stderr, 10000) // the buffer will be of fixed size of 10 kb
-	hook.LogLevels = []log.Level{
-		// this log levels are always logged and cause the buffer with Debug and
-		// Info levels to be flushed. This behavior is specified by the next
-		// statement where we define FlushCondition
-		logrus.PanicLevel,
-		logrus.FatalLevel,
-		logrus.ErrorLevel,
-		logrus.WarnLevel,
-
-		// this log levels are not logged immediately but rather kept in buffer
-		// until one of the previously defined levels is logged
-		logrus.InfoLevel,
-		logrus.DebugLevel,
-	},
-	// here we actually define that all levels starting from `Warning` should
-	// cause buffer to be flushed
+	// the buffer will be of fixed size of 10 kb
+	hook := bufferhook.New(os.Stderr, 10000)
+	// here we  define that all levels starting from `Warning` (so also `Error`,
+	// `Fatal` and `Panic`) should cause buffer (containing `Info` and `Debug`
+	// logs) to be flushed
 	hook.FlushCondition = bufferhook.FlushOnLevel(logrus.WarnLevel)
 
 	logger.AddHook(hook)
