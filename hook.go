@@ -2,6 +2,7 @@ package logrusbufferhook
 
 import (
 	"io"
+	"sync"
 
 	"github.com/sirupsen/logrus"
 )
@@ -26,6 +27,7 @@ type Hook struct {
 	FlushCondition FlushCondition
 	Formatter      logrus.Formatter
 
+	mu  sync.Mutex
 	w   io.Writer
 	buf *Buffer
 }
@@ -44,13 +46,15 @@ func (hook *Hook) Fire(entry *logrus.Entry) error {
 		return err
 	}
 
+	hook.mu.Lock()
+	defer hook.mu.Unlock()
+
 	if !hook.FlushCondition(entry, line, hook.buf) {
 		_, err = hook.buf.Write(line)
 		return err
 	}
 
-	_, err = hook.buf.WriteTo(hook.w)
-	if err != nil {
+	if _, err := hook.buf.WriteTo(hook.w); err != nil {
 		return err
 	}
 
@@ -60,6 +64,15 @@ func (hook *Hook) Fire(entry *logrus.Entry) error {
 
 func (hook *Hook) Levels() []logrus.Level {
 	return hook.LogLevels
+}
+
+// Flush forces underlying buffer to flush its content
+func (hook *Hook) Flush() error {
+	hook.mu.Lock()
+	defer hook.mu.Unlock()
+
+	_, err := hook.buf.WriteTo(hook.w)
+	return err
 }
 
 func FlushOnLevel(level logrus.Level) FlushCondition {

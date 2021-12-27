@@ -5,6 +5,7 @@ import (
 	"io"
 	"reflect"
 	"strings"
+	"sync"
 	"testing"
 	"testing/quick"
 
@@ -46,6 +47,39 @@ func TestFlushOnBufferOverflow(t *testing.T) {
 
 	if logsNum == 0 || flushesNum == 0 || flushesNum > logsNum/2 {
 		t.Errorf("it's not statistically possible to have %d logs and %d flushes", logsNum, flushesNum)
+	}
+}
+
+func TestConcurrentLogging(t *testing.T) {
+	buf := &bytes.Buffer{}
+
+	logger := logrus.New()
+	logger.SetFormatter(&logrusbufferhook.NullFormatter{})
+	logger.SetOutput(io.Discard)
+
+	hook := logrusbufferhook.New(buf, 30)
+	hook.Formatter = &testFormatter{}
+	logger.AddHook(hook)
+
+	experimentsNum := 100
+
+	wg := sync.WaitGroup{}
+	wg.Add(experimentsNum)
+
+	for i := 0; i < experimentsNum; i++ {
+		go func(i int) {
+			logger.Infof("log %d", i)
+			wg.Done()
+		}(i)
+	}
+
+	wg.Wait()
+	hook.Flush()
+
+	writtenLogs := strings.Split(strings.TrimSpace(buf.String()), "\n")
+
+	if len(writtenLogs) != experimentsNum {
+		t.Fatalf("expected to have %d logs, got: %d", experimentsNum, len(writtenLogs))
 	}
 }
 
